@@ -1,11 +1,27 @@
 # Databricks notebook source
-dir_path = "abfss://00landing@odapczlakeg2dev.dfs.core.windows.net/BRONZE/RAW/Adform/meta_unzipeed/"
+from includes.const import dir_path
+from includes.schema import schema_from_meta
+
+# COMMAND ----------
+
 files = dbutils.fs.ls(dir_path)
-df_list = []
+i = 0
 for file in files:
-    if (".json" in str(file)):
+    if i == 20:
+        break
+    if (str(file.path).endswith(".json")):
         df = spark.read.option("inferSchema", True).json(file.path, multiLine = True)
         if (len(df.columns) > 1):
+            df = spark.read.schema(schema_from_meta[i]).json(file.path, multiLine = True)
             file = file.name[:-5].replace('-', '_')
             df.write.format("delta").mode("overwrite").saveAsTable(f'iz_gdc_bronze.{file}')
+            i = i + 1
+
+# COMMAND ----------
+
+print(dbutils.fs.head("abfss://00landing@odapczlakeg2dev.dfs.core.windows.net/BRONZE/RAW/Adform/meta_unzipeed/trackingpoints.json"))
+
+
+# COMMAND ----------
+
 

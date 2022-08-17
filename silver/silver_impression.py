@@ -3,19 +3,26 @@
 
 # COMMAND ----------
 
-from pyspark.sql.functions import *
-df1 = df_impression.withColumn("UnloadVars", regexp_replace("UnloadVars", '""', '"'))
-df1 = df1.withColumn("UnloadVars", expr("substring(UnloadVars, 2, length(UnloadVars)-2)"))
-df1 = df1.withColumn("UnloadVars", from_json("UnloadVars", schema)).select(col("yyyymmdd"), col("BatchId"), col("TransactionId"), col("Timestamp"), col("CookieID"), col("TagId"), col("RotatorId"), col("BannerId"), col("InnerBannerId"), col("BannerElementGroupId"), col("PublisherDomain"), col("CampaignId"), col("PlacementId"), col("CookiesEnabled"), col("IsRobot"), col("UniqueBannerFlag"), col("UniquePlacementFlag"), col("UniqueMediaFlag"), col("UniqueCampaignFlag"), col("UniquePlacementDayFlag"), col("UniqueCampaignDayFlag"), col("FrequencyCampaignViewInterval"), col("FrequencyPlacementViewInterval"), col("BackupBanner"), col("IP"), col("DeviceTypeId"), col("Engagement"), col("ClientId"), col("CityId"), col("BrowserId"), col("RtbCost"), col("InventorySourceId"), col("RtbDomain"), col("Visibility1Flag"), col("VisibilityTime"), col("VisibilityPercentage"), col("MouseOvers"), col("CrossDeviceData"), col("RtbVars"), col("Timestamp-Server"), col("RtbAdformIncludedFee"), col("RtbBrandSafetyCost"), col("RtbContextualTargetingCost"), col("RTBCrossDeviceCost"), col("RtbMediaCost"), col("RtbRichMediaFee"), col('UnloadVars.*')).select("*", "visibility.*", "interaction.*").drop("visibility", "interaction")
+from pyspark.sql import functions as F
+from includes.schema import schema_unload_vars
 
 # COMMAND ----------
 
-df2 = df1.withColumn("yyyymmdd", col("yyyymmdd").cast(StringType()))
-df2 = df2.withColumn('yyyymmdd',to_date(df2.yyyymmdd, 'yyyyMMdd'))
+df_impression = df_impression.withColumnRenamed("BannerId-AdGroupId","BannerId").withColumnRenamed("PlacementId-ActivityId","PlacementId")
 
 # COMMAND ----------
 
-df2.write.saveAsTable('iz_gdc_silver.impression')
+df_unload_vars = df_impression.withColumn("UnloadVars", F.regexp_replace("UnloadVars", '""', '"'))
+df_unload_vars = df_unload_vars.withColumn("UnloadVars", F.expr("substring(UnloadVars, 2, length(UnloadVars)-2)"))
+df_unload_vars = df_unload_vars.withColumn("UnloadVars", F.from_json("UnloadVars", schema_unload_vars)).select(F.col("yyyymmdd"), F.col("BatchId"), F.col("TransactionId"), F.col("Timestamp"), F.col("CookieID"), F.col("TagId"), F.col("RotatorId"), F.col("BannerId"), F.col("InnerBannerId"), F.col("BannerElementGroupId"), F.col("PublisherDomain"), F.col("CampaignId"), F.col("PlacementId"), F.col("CookiesEnabled"), F.col("IsRobot"), F.col("UniqueBannerFlag"), F.col("UniquePlacementFlag"), F.col("UniqueMediaFlag"), F.col("UniqueCampaignFlag"), F.col("UniquePlacementDayFlag"), F.col("UniqueCampaignDayFlag"), F.col("FrequencyCampaignViewInterval"), F.col("FrequencyPlacementViewInterval"), F.col("BackupBanner"), F.col("IP"), F.col("DeviceTypeId"), F.col("Engagement"), F.col("ClientId"), F.col("CityId"), F.col("BrowserId"), F.col("RtbCost"), F.col("InventorySourceId"), F.col("RtbDomain"), F.col("Visibility1Flag"), F.col("VisibilityTime"), F.col("VisibilityPercentage"), F.col("MouseOvers"), F.col("CrossDeviceData"), F.col("RtbVars"), F.col("Timestamp-Server"), F.col("RtbAdformIncludedFee"), F.col("RtbBrandSafetyCost"), F.col("RtbContextualTargetingCost"), F.col("RTBCrossDeviceCost"), F.col("RtbMediaCost"), F.col("RtbRichMediaFee"), F.col('UnloadVars.*')).select("*", "visibility.*", "interaction.*").drop("visibility", "interaction")
+
+# COMMAND ----------
+
+df_date = df_unload_vars.withColumn('yyyymmdd', F.to_date(df_unload_vars.yyyymmdd, 'yyyyMMdd'))
+
+# COMMAND ----------
+
+df_date.write.saveAsTable('iz_gdc_silver.impression')
 
 # COMMAND ----------
 
