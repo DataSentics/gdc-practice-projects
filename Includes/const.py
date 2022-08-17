@@ -1,0 +1,2 @@
+click_file_path = 'abfss://00landing@odapczlakeg2dev.dfs.core.windows.net/BRONZE/RAW/Adform/Click/click_210463.csv'
+meta_dir_path = 'abfss://00landing@odapczlakeg2dev.dfs.core.windows.net/BRONZE/RAW/Adform/meta_unzipeed'
