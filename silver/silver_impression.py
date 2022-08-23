@@ -12,9 +12,13 @@ df_impression = df_impression.withColumnRenamed("BannerId-AdGroupId","BannerId")
 
 # COMMAND ----------
 
-df_unload_vars = df_impression.withColumn("UnloadVars", F.regexp_replace("UnloadVars", '""', '"'))
-df_unload_vars = df_unload_vars.withColumn("UnloadVars", F.expr("substring(UnloadVars, 2, length(UnloadVars)-2)"))
-df_unload_vars = df_unload_vars.withColumn("UnloadVars", F.from_json("UnloadVars", schema_unload_vars)).select(F.col("yyyymmdd"), F.col("BatchId"), F.col("TransactionId"), F.col("Timestamp"), F.col("CookieID"), F.col("TagId"), F.col("RotatorId"), F.col("BannerId"), F.col("InnerBannerId"), F.col("BannerElementGroupId"), F.col("PublisherDomain"), F.col("CampaignId"), F.col("PlacementId"), F.col("CookiesEnabled"), F.col("IsRobot"), F.col("UniqueBannerFlag"), F.col("UniquePlacementFlag"), F.col("UniqueMediaFlag"), F.col("UniqueCampaignFlag"), F.col("UniquePlacementDayFlag"), F.col("UniqueCampaignDayFlag"), F.col("FrequencyCampaignViewInterval"), F.col("FrequencyPlacementViewInterval"), F.col("BackupBanner"), F.col("IP"), F.col("DeviceTypeId"), F.col("Engagement"), F.col("ClientId"), F.col("CityId"), F.col("BrowserId"), F.col("RtbCost"), F.col("InventorySourceId"), F.col("RtbDomain"), F.col("Visibility1Flag"), F.col("VisibilityTime"), F.col("VisibilityPercentage"), F.col("MouseOvers"), F.col("CrossDeviceData"), F.col("RtbVars"), F.col("Timestamp-Server"), F.col("RtbAdformIncludedFee"), F.col("RtbBrandSafetyCost"), F.col("RtbContextualTargetingCost"), F.col("RTBCrossDeviceCost"), F.col("RtbMediaCost"), F.col("RtbRichMediaFee"), F.col('UnloadVars.*')).select("*", "visibility.*", "interaction.*").drop("visibility", "interaction")
+df_unload_vars = (df_impression.withColumn("UnloadVars", F.regexp_replace("UnloadVars", '""', '"'))
+                               .withColumn("UnloadVars", F.expr("substring(UnloadVars, 2, length(UnloadVars)-2)"))
+                               .withColumn("UnloadVars", F.from_json("UnloadVars", schema_unload_vars))
+                               .drop("MouseOverTime")
+                               .select("*", "UnloadVars.id", "UnloadVars.visibility.*", "UnloadVars.interaction.*")
+                               .drop("UnloadVars")
+                 )
 
 # COMMAND ----------
 
@@ -48,3 +52,7 @@ df_joined=df_impression.join(df_bannersadgroups, df_impression.BannerId == df_ba
                        .join(df_placementsactivities, df_impression.PlacementId == df_placementsactivities.id, how = "left")\
                        .join(df_tags, df_impression.TagId == df_tags.id, how = "left")\
                        .join(df_zipcodes, df_impression.CityId == df_zipcodes.cityId, how = "left")
+
+# COMMAND ----------
+
+df_joined.write.saveAsTable('iz_gdc_silver.joined_table')

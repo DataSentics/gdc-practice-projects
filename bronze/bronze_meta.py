@@ -16,12 +16,3 @@ for file in files:
             file = file.name[:-5].replace('-', '_')
             df.write.format("delta").mode("overwrite").saveAsTable(f'iz_gdc_bronze.{file}')
             i = i + 1
-
-# COMMAND ----------
-
-print(dbutils.fs.head("abfss://00landing@odapczlakeg2dev.dfs.core.windows.net/BRONZE/RAW/Adform/meta_unzipeed/trackingpoints.json"))
-
-
-# COMMAND ----------
-
-
