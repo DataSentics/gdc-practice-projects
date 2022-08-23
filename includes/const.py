@@ -1,0 +1,1 @@
+dir_path = "abfss://00landing@odapczlakeg2dev.dfs.core.windows.net/BRONZE/RAW/Adform/meta_unzipeed/"
