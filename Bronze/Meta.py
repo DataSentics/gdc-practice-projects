@@ -18,9 +18,6 @@ for file in meta_files:
         if(len(df_meta.columns) > 0 and "_corrupt_record" not in df_meta.columns):
             df_meta = spark.read.schema(sc.meta_schemas_list[i]).json(file.path, multiLine = True)
             file_name = file.name.replace("-","_")[:-5]
-            df_meta.write.format("delta").mode("overwrite").saveAsTable(f"odap_bronze.meta_{file_name}")
+            spark.sql(f"DROP TABLE IF EXISTS odap_bronze.meta_{file_name}")
+            df_meta.write.mode("append").saveAsTable(f"odap_bronze.meta_{file_name}")
             i = i + 1
-
-# COMMAND ----------
-
-
