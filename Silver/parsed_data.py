@@ -16,7 +16,9 @@ df_silver_click = (df_bronze_click
 spark.sql("DROP TABLE IF EXISTS silver.click")
 df_silver_click.write.mode("append").saveAsTable("silver.click")
 
+# COMMAND ----------
+
 batch_id = spark.sql("select distinct(BatchId) from silver.click").rdd.map(lambda row : row[0]).collect()
 batch_id.sort()
 dbutils.widgets.dropdown("batch_id", "210463", [str(x) for x in batch_id])
-df_silver_click = df_silver_click.filter(df_silver_click.BatchId == dbutils.widgets.get("batch_id"))
+display(df_silver_click.filter(df_silver_click.BatchId == dbutils.widgets.get("batch_id")))
