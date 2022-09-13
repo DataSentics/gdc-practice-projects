@@ -1,15 +1,8 @@
 # Databricks notebook source
-# MAGIC %run ../Bronze/Click
-
-# COMMAND ----------
-
-# MAGIC %run ../Bronze/Meta
-
-# COMMAND ----------
-
 from pyspark.sql import functions as f
 from Includes.schemas import schema_silver_click
 
+df_bronze_click = spark.table("odap_bronze.click")
 df_silver_click = (df_bronze_click
                    .withColumn("yyyymmdd", f.to_date(f.col("yyyymmdd"), "yyyyMMdd"))
                    .withColumn("UnloadVars", f.regexp_replace("UnloadVars", '""', '"'))
@@ -20,4 +13,12 @@ df_silver_click = (df_bronze_click
                    .drop("UnloadVars")
                   )
 
-df_silver_click.write.format("delta").mode("overwrite").saveAsTable("silver.click")
+spark.sql("DROP TABLE IF EXISTS silver.click")
+df_silver_click.write.mode("append").saveAsTable("silver.click")
+
+# COMMAND ----------
+
+batch_id = spark.sql("select distinct(BatchId) from silver.click").rdd.map(lambda row : row[0]).collect()
+batch_id.sort()
+dbutils.widgets.dropdown("batch_id", "210463", [str(x) for x in batch_id])
+display(df_silver_click.filter(df_silver_click.BatchId == dbutils.widgets.get("batch_id")))
